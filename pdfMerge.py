@@ -21,8 +21,9 @@ def download_file(file_url, file_name):
         file.write(response.content)
 
 def main():
-    st.title("PDF Document Merge APP")
-
+    st.title("PDF Document Edit APP")
+    st.markdown("---")
+    st.subheader("PDF Files Merge")
     # File upload
     uploaded_files = st.file_uploader("Upload PDF files", accept_multiple_files=True)
 
@@ -37,13 +38,7 @@ def main():
         st.download_button("Download Merged PDF", data=merged_file, file_name="merged.pdf",mime='application/octet-stream')
 
     st.markdown("---")
-    st.markdown("Demo video download")
-    st.video("Bisalloy_demo.mp4")
-
-    file_url = 'https://webify-1306024390.cos.ap-shanghai.myqcloud.com/Download/Bisalloy_UH-RFID_Wear_Sensor_Demo.mp4'
-    #file_name = 'Bisalloy_demo.mp4'
-    file_data = requests.get(file_url).content
-    st.download_button('Download This Demo', data=file_data, file_name="Bisalloy_demo.mp4", mime='application/octet-stream')
+    st.subheader("PDF Files to Images")
 
 
 
