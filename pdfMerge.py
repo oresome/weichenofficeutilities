@@ -5,6 +5,8 @@ import requests
 import fitz
 import os
 import shutil
+from zipfile import ZipFile
+import glob
 
 def merge_pdfs(pdfFiles):
     merger = PdfMerger()
@@ -37,7 +39,7 @@ def pdf_to_images_with_resolution(pdf_path, output_folder, resolution):
         zoom_y = resolution / 72
         trans = fitz.Matrix(zoom_x, zoom_y)
         pixmap = page.get_pixmap(matrix=trans)
-        image_path = output_folder + f"page{page_number}_res{resolution}.png"
+        image_path = f"page{page_number}_res{resolution}.png"
         #st.markdown(image_path)
         pixmap.pil_save(image_path)
 
@@ -77,8 +79,16 @@ def main():
 
     if uploaded_files_image:
         # convert PDF
-        pdf_to_images_with_resolution(uploaded_files_image, "imageResults/", resolution=int(RESoption))
-        shutil.make_archive("imageResults", 'zip', "imageResults/")
+        pdf_to_images_with_resolution(uploaded_files_image, "/", resolution=int(RESoption))
+        
+        imageList = glob.glob('page*.png')
+        # create a ZipFile object
+        zipObj = ZipFile('imageResults.zip', 'w')
+        # Add multiple files to the zip
+        for image in imageList:
+            zipObj.write(image)
+        zipObj.close()  
+        
         # Download button
         with open("imageResults.zip", "rb") as fp:
             btn = st.download_button(
@@ -89,9 +99,11 @@ def main():
             )
         
         # remove then recreate "imageResults/"
-        shutil.rmtree("imageResults/")
+        #shutil.rmtree("imageResults/")
         os.remove("imageResults.zip")
-        os.makedirs("imageResults/")
+        for image in imageList:
+            os.remove(image)
+        #os.makedirs("imageResults/")
 
 
 
