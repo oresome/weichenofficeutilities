@@ -2,6 +2,9 @@ import streamlit as st
 from PyPDF2 import PdfMerger, PdfReader
 from io import BytesIO
 import requests
+import fitz
+import os
+import shutil
 
 def merge_pdfs(pdfFiles):
     merger = PdfMerger()
@@ -20,6 +23,25 @@ def download_file(file_url, file_name):
     with open(file_name, 'wb') as file:
         file.write(response.content)
 
+def pdf_to_images_with_resolution(pdf_path, output_folder, resolution):
+    with open("temp_file.pdf", "wb") as f:
+        f.write(pdf_path.getbuffer())
+    pdf_document = fitz.open("temp_file.pdf")
+    #st.markdown(pdf_document)
+    #st.markdown(pdf_document.page_count)
+    for page_number in range(pdf_document.page_count):
+        page = pdf_document.load_page(page_number)
+        #st.markdown(page)
+        # Calculate the image size based on the specified resolution
+        zoom_x = resolution / 72  # 1 point (pt) is equal to 1/72 inch
+        zoom_y = resolution / 72
+        trans = fitz.Matrix(zoom_x, zoom_y)
+        pixmap = page.get_pixmap(matrix=trans)
+        image_path = output_folder + f"page{page_number}_res{resolution}.png"
+        #st.markdown(image_path)
+        pixmap.pil_save(image_path)
+
+
 def main():
     st.title("PDF Document Edit APP")
     st.markdown("---")
@@ -37,9 +59,39 @@ def main():
         # Download button
         st.download_button("Download Merged PDF", data=merged_file, file_name="merged.pdf",mime='application/octet-stream')
 
+
+    ##############################################################################################################
+
     st.markdown("---")
     st.subheader("PDF Files to Images")
+    # File upload
+    uploaded_files_image = st.file_uploader("Upload a PDF file", accept_multiple_files=False)
+    #st.markdown(uploaded_files_image)
 
+    # resolution options
+    RESoption = st.selectbox(
+                        'Please Select the Image Resolution',
+                        ('150', '100', '300', '600'))
+
+    st.write('You Selected:', RESoption)
+
+    if uploaded_files_image:
+        # convert PDF
+        pdf_to_images_with_resolution(uploaded_files_image, "imageResults/", resolution=int(RESoption))
+        shutil.make_archive("imageResults", 'zip', "imageResults/")
+        # Download button
+        with open("imageResults.zip", "rb") as fp:
+            btn = st.download_button(
+                label="Download Converted Images",
+                data=fp,
+                file_name="imageResults.zip",
+                mime="application/zip"
+            )
+        
+        # remove then recreate "imageResults/"
+        shutil.rmtree("imageResults/")
+        os.remove("imageResults.zip")
+        os.makedirs("imageResults/")
 
 
 
